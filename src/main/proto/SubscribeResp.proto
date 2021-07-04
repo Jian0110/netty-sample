@@ -1,0 +1,10 @@
+syntax = "proto3";
+package netty;
+option java_package = "com.lijian.protobuf";
+option java_outer_classname = "SubscribeRespProto";
+
+message SubscribeResp{
+    required int32 subReqId = 1;
+    required string respCode = 2;
+    required string desc = 3;
+}
