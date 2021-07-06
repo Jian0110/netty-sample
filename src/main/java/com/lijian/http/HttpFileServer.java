@@ -23,10 +23,10 @@ import io.netty.handler.stream.ChunkedWriteHandler;
 
 public class HttpFileServer {
 
-    public static final String DEFAULT_URL="";
+    public static final String DEFAULT_URL="/src/com/jian/netty/";
 
     public static void main(String[] args) throws Exception {
-        int port = 8082;
+        int port = 8180;
         String url = DEFAULT_URL;
         new HttpFileServer().run(port, url);
     }
@@ -48,19 +48,20 @@ public class HttpFileServer {
                         @Override
                         protected void initChannel(SocketChannel socketChannel) throws Exception {
                             socketChannel.pipeline().addLast(new ProtobufVarint32FrameDecoder());
-                            // 添加ProtobufDecoder解码器，需要解码的目标类是SubscribeReq
+                            // 添加HttpRequestDecoder解码器
                             socketChannel.pipeline().addLast("http-decoder", new HttpRequestDecoder());
                             // HttpObjectAggregator将多个消息转换为单一的FullHttpRequest
                             socketChannel.pipeline().addLast("http-aggregator", new HttpObjectAggregator(65563));
+                            // 添加HttpResponseEncoder编码器
                             socketChannel.pipeline().addLast("http-encoder", new HttpResponseEncoder());
                             // Chunked handler支持异步发送大的码流（大文件传输）
                             socketChannel.pipeline().addLast("http-chunked", new ChunkedWriteHandler());
-                            socketChannel.pipeline().addLast("fileServerHandler", new SubReqServerHandler());
+                            socketChannel.pipeline().addLast("fileServerHandler", new HttpFileServerHandler(url));
                         }
                     });
             // 绑定端口，同步等待成功
-            ChannelFuture f = bootstrap.bind("192.168.1.102", port).sync();
-            System.out.println("Http file server is running, website is: http://192.168.1.102:"+port+url);
+            ChannelFuture f = bootstrap.bind("127.0.0.1", port).sync();
+            System.out.println("Http file server is running, website is: http://127.0.0.1:"+port+url);
             // 等待所有服务端监听端口关闭
             f.channel().closeFuture().sync();
         } finally {

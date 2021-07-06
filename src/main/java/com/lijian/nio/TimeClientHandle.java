@@ -21,8 +21,11 @@ public class TimeClientHandle implements Runnable {
         this.host = host == null ? "127.0.0.1" : host;
         this.port = port;
         try {
+            // 创建多路复用器并打开
             selector = Selector.open();
+            // 1.打开SocketChannel，
             socketChannel = SocketChannel.open();
+            // 2.设置SocketChannel非阻塞模式， 这里不设置TCP参数
             socketChannel.configureBlocking(false);
         } catch (IOException e) {
             e.printStackTrace();
@@ -34,6 +37,7 @@ public class TimeClientHandle implements Runnable {
     @Override
     public void run() {
         try {
+            // 连接服务端
             doConnect();
         } catch (IOException e) {
             e.printStackTrace();
@@ -41,6 +45,7 @@ public class TimeClientHandle implements Runnable {
         }
         while (!stop) {
             try {
+                // 6. 多路复用器在线程run方法的无限循环体内轮询准备就绪的Key
                 selector.select(1000);
                 Set<SelectionKey> selectedKeys = selector.selectedKeys();
                 Iterator<SelectionKey> it = selectedKeys.iterator();
@@ -75,12 +80,21 @@ public class TimeClientHandle implements Runnable {
         }
     }
 
+
+    /**
+     * 处理客户端输入
+     *
+     * @param key
+     * @throws IOException
+     */
     private void handleInput(SelectionKey key) throws IOException {
 
         if (key.isValid()) {
             // 判断是否连接成功
             SocketChannel sc = (SocketChannel) key.channel();
+            // 7. 接收connect事件进行处理
             if (key.isConnectable()) {
+                // 8. 如果连接完成则注册读事件到多路复用器
                 if (sc.finishConnect()) {
                     sc.register(selector, SelectionKey.OP_READ);
                     doWrite(sc);
@@ -90,6 +104,7 @@ public class TimeClientHandle implements Runnable {
             }
             if (key.isReadable()) {
                 ByteBuffer readBuffer = ByteBuffer.allocate(1024);
+                // 9. 异步读客户端请求消息到缓冲区
                 int readBytes = sc.read(readBuffer);
                 if (readBytes > 0) {
                     readBuffer.flip();
@@ -103,7 +118,7 @@ public class TimeClientHandle implements Runnable {
                     key.cancel();
                     sc.close();
                 } else {
-                    ; // 读到0字节，忽略
+                    // 读到0字节，忽略
                 }
             }
         }
@@ -111,11 +126,14 @@ public class TimeClientHandle implements Runnable {
     }
 
     private void doConnect() throws IOException {
-        // 如果直接连接成功，则注册到多路复用器上，发送请求消息，读应答
-        if (socketChannel.connect(new InetSocketAddress(host, port))) {
+        // 3. 异步连接客户端
+        boolean connected = socketChannel.connect(new InetSocketAddress(host, port));
+        if (connected) {
+            // 4. 返回true则直接连接成功，则注册到多路复用器上，发送请求消息，读应答
             socketChannel.register(selector, SelectionKey.OP_READ);
             doWrite(socketChannel);
         } else {
+            // 5. 如果返回false，则说明此时链路还没有建立，则注册OP_CONNECT状态位，监听服务端的TCP ACK应答
             socketChannel.register(selector, SelectionKey.OP_CONNECT);
         }
     }
