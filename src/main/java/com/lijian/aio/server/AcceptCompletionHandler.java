@@ -32,6 +32,7 @@ public class AcceptCompletionHandler implements CompletionHandler<AsynchronousSo
     @Override
     public void failed(Throwable exc, AsyncTimeServerHandler attachment) {
         exc.printStackTrace();
+        // 让服务线程不再阻塞
         attachment.latch.countDown();
     }
 }

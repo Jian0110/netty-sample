@@ -8,6 +8,13 @@ import java.nio.channels.AsynchronousSocketChannel;
 import java.nio.channels.CompletionHandler;
 import java.util.concurrent.CountDownLatch;
 
+
+/**
+ * 客户端AIO异步回调处理任务
+ * -打开AsynchronousSocketChannel通道，连接服务端
+ * -发送服务端指令
+ * -回调处理服务端应答
+ */
 public class AsyncTimeClientHandler implements CompletionHandler<Void, AsyncTimeClientHandler>, Runnable {
 
     private AsynchronousSocketChannel client;

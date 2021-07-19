@@ -8,7 +8,8 @@ import java.nio.channels.CompletionHandler;
 
 
 /**
- *
+ * 服务端read事件异步处理器
+ *  completed异步回调处理客户端请求数据
  */
 public class ReadCompletionHandler implements CompletionHandler<Integer, ByteBuffer> {
     private AsynchronousSocketChannel channel;

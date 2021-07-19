@@ -5,6 +5,11 @@ import java.net.InetSocketAddress;
 import java.nio.channels.AsynchronousServerSocketChannel;
 import java.util.concurrent.CountDownLatch;
 
+/**
+ * 服务端AIO异步处理任务
+ * -创建异步服务通道监听端口
+ * -监听客户端连接
+ */
 public class AsyncTimeServerHandler implements Runnable{
 
     private int port;
@@ -30,7 +35,7 @@ public class AsyncTimeServerHandler implements Runnable{
         latch = new CountDownLatch(1);
         doAccept();
         try {
-            // 防止执行操作线程还未结束，服务端线程就退出
+            // 防止执行操作线程还未结束，服务端线程就退出，程序不退出的前提下，才能够让accept继续可以回调接受来自客户端的连接
             // 实际开发过程中不需要单独开启线程去处理AsynchronousServerSocketChannel
             latch.await();
         } catch (InterruptedException e) {
